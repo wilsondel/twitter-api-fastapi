@@ -34,7 +34,7 @@ class User(UserBase):
         ...,
         min_length=1,
         max_length=50)
-    birthday: Optional[date] = Field(default=None)
+    birthdate: Optional[date] = Field(default=None)
 
 class UserRegister(User):
     password: str = Field(
@@ -43,7 +43,7 @@ class UserRegister(User):
         max_length=64
     )
 class Tweet(BaseModel):
-    Tweet_id: UUID = Field(...)
+    tweet_id: UUID = Field(...)
     content: str = Field(
         ...,
         min_length=1,
@@ -82,13 +82,13 @@ def signup(
     - email: Emailstr
     - first_name: str
     - last_name: str
-    - birthday: date
+    - birthdate: date
     """
     with open("users.json","r+", encoding="utf-8") as f:
         results = json.loads(f.read())
         user_dict=user.dict()
         user_dict["user_id"] = str(user_dict["user_id"])
-        user_dict["birthday"] = str(user_dict["birthday"])
+        user_dict["birthdate"] = str(user_dict["birthdate"])
         results.append(user_dict)
         f.seek(0)
         f.write(json.dumps(results))
@@ -125,7 +125,7 @@ def show_all_users():
     - email: Emailstr
     - first_name: str
     - last_name: str
-    - birthday: date
+    - birthdate: date
 
     """
     with open("users.json","r", encoding="utf-8") as f:
@@ -188,8 +188,37 @@ def home():
     summary = "Post a tweet",
     tags = ["Tweets"]
 )
-def post_tweet():
-    pass
+def post_tweet(
+    tweet: Tweet = Body(...)
+):
+    """
+    Post a tweet
+
+    This path operation post a tweet in the app
+
+    Parameters: 
+    - Request body parameter
+        - tweet: Tweet
+    
+    Returns a json with the basic tweet information:
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: Optional[datetime]
+    - by: User
+    """
+    with open("tweets.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        tweet_dict=tweet.dict()
+        tweet_dict["tweet_id"] = str(tweet_dict["tweet_id"])
+        tweet_dict["created_at"] = str(tweet_dict["created_at"])
+        tweet_dict["updated_at"] = str(tweet_dict["updated_at"])
+        tweet_dict["by"]["user_id"] = str(tweet_dict["by"]["user_id"])
+        tweet_dict["by"]["birthdate"] = str(tweet_dict["by"]["birthdate"])
+        results.append(tweet_dict)
+        f.seek(0)
+        f.write(json.dumps(results))
+        return tweet
 
 ### Show a tweet
 @app.get(
