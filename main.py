@@ -209,8 +209,40 @@ def show_user(
     summary = "Delete a user",
     tags = ["Users"]
 )
-def delete_user():
-    pass
+def delete_user(
+    user: UserRegister = Body(...)
+):
+    """
+    Delete a user
+
+    This path operation delete a user in the app
+
+    Parameters: 
+    - Request body parameter
+        - user: UserRegister
+    
+    Returns a json with the basic user information (if user exists):
+    - user_id: UUID
+    - email: Emailstr
+    - first_name: str
+    - last_name: str
+    - birthdate: date\n
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("users.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        user_dict=user.dict()
+        user_dict["user_id"] = str(user_dict["user_id"])
+        user_dict["birthdate"] = str(user_dict["birthdate"])
+        for i,u in enumerate(results):
+            if u["email"] == user_dict["email"]:
+                results.pop(i)
+                f.truncate(0)
+                f.seek(0)
+                f.write(json.dumps(results))
+                return user
+    raise HTTPException(status_code=404, detail="User not found")
+
 
 ### Update a user
 @app.put(
