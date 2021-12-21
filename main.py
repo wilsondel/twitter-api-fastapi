@@ -9,7 +9,7 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 
 # FastAPI
-from fastapi import FastAPI, status,Body
+from fastapi import FastAPI, status,Body,HTTPException
 
 app = FastAPI()
 
@@ -102,8 +102,36 @@ def signup(
     summary = "Login a user",
     tags = ["Users"]
 )
-def login():
-    pass
+def login(
+    user: UserRegister = Body(...)
+):
+    """
+    Login
+
+    This path operation login a user in the app
+
+    Parameters: 
+    - Request body parameter
+        - user: UserRegister
+    
+    Returns a json with the basic user information (if user exists):
+    - user_id: UUID
+    - email: Emailstr
+    - first_name: str
+    - last_name: str
+    - birthdate: date
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("users.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        user_dict=user.dict()
+        user_dict["user_id"] = str(user_dict["user_id"])
+        user_dict["birthdate"] = str(user_dict["birthdate"])
+        print(results)
+        for u in results:
+            if u["email"] == user_dict["email"]:
+                return user
+    raise HTTPException(status_code=404, detail="User not found")
 
 ### Show all users
 @app.get(
