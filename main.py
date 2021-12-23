@@ -9,7 +9,7 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 
 # FastAPI
-from fastapi import FastAPI, status,Body,HTTPException
+from fastapi import FastAPI, status,Body,HTTPException, Path
 
 app = FastAPI()
 
@@ -170,16 +170,16 @@ def show_all_users():
     tags = ["Users"]
 )
 def show_user(
-    user: UserRegister = Body(...)
+    id: UUID = Path(...)
 ):
     """
     Show a user
 
-    This path operation show a user in the app
+    This path operation shows a user in the app
 
     Parameters: 
-    - Request body parameter
-        - user: UserRegister
+    - Path parameter
+        - id: UUID
     
     Returns a json with the basic user information (if user exists):
     - user_id: UUID
@@ -191,13 +191,9 @@ def show_user(
     """
     with open("users.json","r+", encoding="utf-8") as f:
         results = json.loads(f.read())
-        user_dict=user.dict()
-        user_dict["user_id"] = str(user_dict["user_id"])
-        user_dict["birthdate"] = str(user_dict["birthdate"])
-        print(results)
         for u in results:
-            if u["email"] == user_dict["email"]:
-                return user
+            if u["user_id"] == str(id):
+                return u
     raise HTTPException(status_code=404, detail="User not found")
 
 
@@ -210,16 +206,16 @@ def show_user(
     tags = ["Users"]
 )
 def delete_user(
-    user: UserRegister = Body(...)
+    id: UUID = Path(...)
 ):
     """
     Delete a user
 
-    This path operation delete a user in the app
+    This path operation deletes a user in the app
 
     Parameters: 
-    - Request body parameter
-        - user: UserRegister
+    - Path parameter
+        - id: UUID
     
     Returns a json with the basic user information (if user exists):
     - user_id: UUID
@@ -231,16 +227,16 @@ def delete_user(
     """
     with open("users.json","r+", encoding="utf-8") as f:
         results = json.loads(f.read())
-        user_dict=user.dict()
-        user_dict["user_id"] = str(user_dict["user_id"])
-        user_dict["birthdate"] = str(user_dict["birthdate"])
+        # user_dict=user.dict()
+        # user_dict["user_id"] = str(user_dict["user_id"])
+        # user_dict["birthdate"] = str(user_dict["birthdate"])
         for i,u in enumerate(results):
-            if u["email"] == user_dict["email"]:
+            if u["user_id"] == str(id):
                 results.pop(i)
                 f.truncate(0)
                 f.seek(0)
                 f.write(json.dumps(results))
-                return user
+                return u
     raise HTTPException(status_code=404, detail="User not found")
 
 
@@ -252,8 +248,46 @@ def delete_user(
     summary = "Update a user",
     tags = ["Users"]
 )
-def update_user():
-    pass
+def update_user(
+    id: UUID = Path(...),
+    user_updated: UserRegister = Body(...)
+):
+    """
+    Update a user
+
+    This path operation updates a user in the app
+
+    Parameters: 
+    - Path parameter
+        - id: UUID
+    - Body request parameter
+        - user_updated: UserRegister
+    
+    Returns a json with the basic user information updated (if user exists):
+    - user_id: UUID
+    - email: Emailstr
+    - first_name: str
+    - last_name: str
+    - birthdate: date\n
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("users.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        user_dict=user_updated.dict()
+        user_dict["user_id"] = str(user_dict["user_id"])
+        user_dict["birthdate"] = str(user_dict["birthdate"])
+        for i,u in enumerate(results):
+            if u["user_id"] == str(id):
+                u["first_name"] = user_dict["first_name"]
+                u["last_name"] = user_dict["last_name"]
+                u["birthdate"] = user_dict["birthdate"]
+                u["password"] = user_dict["password"]
+                f.truncate(0)
+                f.seek(0)
+                f.write(json.dumps(results))
+                return u
+    raise HTTPException(status_code=404, detail="User not found")
+
 
 
 ## Tweets
