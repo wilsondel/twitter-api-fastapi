@@ -367,8 +367,33 @@ def post_tweet(
     summary = "Show a tweet",
     tags = ["Tweets"]
 )
-def show_tweet():
-    pass
+def show_tweet(
+    id: UUID = Path(...)
+):
+    """
+    Show a tweet
+
+    This path operation shows a tweet in the app
+
+    Parameters: 
+    - Path parameter
+        - id: UUID
+    
+    Returns a json with the tweet information (if tweet exists):
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: User\n
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("tweets.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        for tweet in results:
+            if tweet["tweet_id"] == str(id):
+                return tweet
+
+    raise HTTPException(status_code=404, detail="Tweet not found")
 
 ### Delete a tweet
 @app.delete(
