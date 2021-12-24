@@ -403,8 +403,38 @@ def show_tweet(
     summary = "Delete a tweet",
     tags = ["Tweets"]
 )
-def delete_tweet():
-    pass
+def delete_tweet(
+    id: UUID = Path(...)
+):
+    """
+    Delete a tweet
+
+    This path operation deletes a tweet in the app
+
+    Parameters: 
+    - Path parameter
+        - id: UUID
+    
+    Returns a json with the tweet information (if tweet exists):
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: User\n
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("tweets.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        for i,tweet in enumerate(results):
+            if tweet["tweet_id"] == str(id):
+                results.pop(i)
+                f.truncate(0)
+                f.seek(0)
+                f.write(json.dumps(results))
+                return tweet
+
+    raise HTTPException(status_code=404, detail="Tweet not found")
+
 
 ### update a tweet
 @app.put(
