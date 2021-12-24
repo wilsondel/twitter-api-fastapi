@@ -444,5 +444,43 @@ def delete_tweet(
     summary = "Update a tweet",
     tags = ["Tweets"]
 )
-def update_tweet():
-    pass
+def update_tweet(
+    id: UUID = Path(...),
+    tweet: Tweet = Body(...)
+):
+    """
+    Update a tweet
+
+    This path operation updates a tweet in the app
+
+    Parameters: 
+    - Path parameter
+        - id: UUID
+    - Body request parameter
+        - tweet: Tweet
+    
+    Returns a json with the tweet information (if tweet exists):
+    - tweet_id: UUID
+    - content: str
+    - created_at: datetime
+    - updated_at: datetime
+    - by: User\n
+    otherwise raise an HTTP exception with status code 404.
+    """
+    with open("tweets.json","r+", encoding="utf-8") as f:
+        results = json.loads(f.read())
+        tweet_dict=tweet.dict()
+        tweet_dict["tweet_id"] = str(tweet_dict["tweet_id"])
+        tweet_dict["created_at"] = str(tweet_dict["created_at"])
+        tweet_dict["updated_at"] = str(datetime.now())
+        tweet_dict["by"]["user_id"] = str(tweet_dict["by"]["user_id"])
+        tweet_dict["by"]["birthdate"] = str(tweet_dict["by"]["birthdate"])
+        results.append(tweet_dict)
+        for i,tweet_user in enumerate(results):
+            if tweet_user["tweet_id"] == str(id):
+                tweet_user=tweet_dict
+                f.truncate(0)
+                f.seek(0)
+                f.write(json.dumps(results))
+                return tweet_user
+    raise HTTPException(status_code=404, detail="Tweet not found")
